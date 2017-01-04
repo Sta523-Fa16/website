@@ -1,0 +1,12 @@
+---
+layout: page
+title: Data Visualization and Exploration
+reading: "<a href='https://duke.app.box.com/v/Stats523Vis2016'>Slides and Exercise</a>"
+notes: ""
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: false
+link: false
+---
+

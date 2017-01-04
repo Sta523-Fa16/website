@@ -1,0 +1,103 @@
+---
+layout: page
+title: Web Scraping
+reading: "<a href='https://cran.r-project.org/web/packages/rvest/vignettes/selectorgadget.html'>rvest and Selectorgadget</a>"
+notes: "Midterm 1 out, due Wed, Oct 12th by 11 pm <br/> Screencast - Scraping (IMDB) Part <a href='https://www.youtube.com/attribution_link?a=kpjcuxFrIUU&u=/watch%3Fv%3D8qjzz3_Gr4c%26feature%3Dem-upload_owner'>1</a>, <a href='https://youtu.be/QaMVdHuie7M'>2</a>"
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: true
+link: true
+---
+
+```{r echo=FALSE}
+library(magrittr)
+```
+
+
+
+
+# Web Scraping with rvest
+
+## Hypertext Markup Language
+
+Most of the data on the web is still largely available as HTML - while it is structured (hierarchical / tree based) it often is not available in a form useful for analysis (flat / tidy).
+
+```html
+<html>
+  <head>
+    <title>This is a title</title>
+  </head>
+  <body>
+    <p align="center">Hello world!</p>
+  </body>
+</html>
+```
+
+## rvest {.smaller}
+
+`rvest` is a package from Hadley Wickham that makes basic processing and manipulation of HTML data straight forward.
+
+<br/>
+
+Core functions:
+
+* `read_html` - read HTML data from a url or character string.
+
+* `html_nodes` - select specified nodes from the HTML document usign CSS selectors.
+
+* `html_table` - parse an HTML table into a data frame.
+
+* `html_text` - extract tag pairs' content.
+
+* `html_name` - extract tags' names.
+
+* `html_attrs` - extract all of each tag's attributes.
+
+* `html_attr` - extract tags' attribute value by name.
+
+
+## css selectors {.smaller}
+
+We will be using a tool called selector gadget to help up identify the html elements of interest - it does this by constructing a css selector which can be used to subset the html document.
+
+<br/>
+
+Selector            Example               Description
+------------      ------------------      --------------------------------------------------
+element             `p`                   Select all &lt;p&gt; elements
+element element     `div p`               Select all &lt;p&gt; elements inside a &lt;div&gt; element
+element>element     `div > p`             Select all &lt;p&gt; elements with &lt;div&gt; as a parent
+.class              `.title`              Select all elements with class="title"
+#id                 `.name`               Select all elements with id="name"
+[attribute]         `[class]`             Select all elements with a class attribute
+[attribute=value]   `[class=title]`       Select all elements with class="title"
+
+## Live Demo
+
+<br/><br/><br/><br/>
+
+<div class="centered">
+<div style="font-size:175%">
+... because `rmarkdown` hates `rvest` for whatever reason ...
+</div>
+</div>
+
+
+## Exercise
+
+For the *first five* movies in the **Now Playing (Box Office)** list on `imdb.com` create a data frame with the Movies' titles, their weekend gross, and the url of their poster.
+
+This will involve multiple steps:
+
+* Using the main imdb page find the title, gross, and the movie specific url within IMDB.
+
+* Examine each movie subpage to find the poster urls. Hint - the same approach should work for all five pages since imdb's movie pages all have the same structure.
+
+<br/>
+
+<div class="centered">
+<div style="font-size:125%">
+The only hard coded url you should be using is `imdb.com`.
+</div>
+</div>

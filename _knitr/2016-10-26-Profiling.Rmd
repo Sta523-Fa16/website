@@ -1,0 +1,153 @@
+---
+layout: page
+title: Profiling & Benchmarking
+reading: "<a href='http://adv-r.had.co.nz/Profiling.html'>Adv. R</a>, <a href='https://rstudio.github.io/profvis/'>Profvis</a>"
+notes:
+slides: true
+link: true
+---
+
+
+```{r set-options, echo=FALSE}
+options(width = 90)
+suppressMessages(library(dplyr))
+knitr::opts_chunk$set(fig.align="center", warning=FALSE, message=FALSE)
+```
+
+# Profiling & Benchmarking
+
+## Profiling & Benchmarking
+
+* Improved performance comes from iteration, and learning the most common pitfalls
+
+* Don't sweat the small stuff - Coder time vs Run time vs Compute costs
+
+* Measure it, or it didn't happen
+
+* "Premature optimization is the root of all evil (or at least most of it) in programming." -Knuth
+
+## How do we measure?
+
+Simplest tool is R's base `system.time` which can be used to wrap any other call or calls.
+
+```{r}
+system.time(rnorm(1e6))
+system.time(rnorm(1e4) %*% t(rnorm(1e4)))
+``` 
+
+## Better benchmarking (pt. 1) {.smaller}
+
+We can do better (better precision) using the microbenchmark package 
+
+```{r, eval=FALSE}
+install.packages("microbenchmark")
+```
+```{r}
+library(microbenchmark)
+
+d = abs(rnorm(1000))
+r = microbenchmark(
+      exp(log(d)/2),
+      d^0.5,
+      sqrt(d),
+      times = 1000
+    )
+print(r)
+```
+
+##
+
+```{r, eval=FALSE}
+boxplot(r)
+```
+
+
+
+## Better benchmarking (pt. 2) {.smaller}
+
+We can also do better using the rbenchmark package 
+
+```{r, eval=FALSE}
+install.packages("rbenchmark")
+```
+```{r}
+library(rbenchmark)
+
+d = abs(rnorm(1000))
+benchmark(
+  exp(log(d)/2),
+  d^0.5,
+  sqrt(d),
+  replications = 1000,
+  order = "relative"
+)
+```
+
+
+## Profiling 
+
+
+<br/>
+<br/>
+<div align="center">
+**Live Demo**
+</div>
+
+
+## Exercise 1 {.smaller}
+
+Earlier we mentioned that growing a vector as you collect results is bad, just how bad is it? Benchmark the following three functions and compare their performance.
+
+
+```{r, eval=FALSE}
+good = function()
+{
+    res = rep(NA, 1e4)
+    for(i in seq_along(res))
+    {
+        res[i] = sqrt(i)
+    }
+}
+```
+
+
+```{r, eval=FALSE}
+bad = function()
+{
+    res = numeric()
+    for(i in 1:1e4)
+    {
+        res = c(res,sqrt(i))
+    }
+}
+```
+
+```{r, eval=FALSE}
+best = function()
+{
+    sqrt(1:1e4)
+}
+```
+
+## Exercise 2 {.smaller}
+
+Lets compare looping vs. the apply function vs dplyr.
+
+* First we will construct a large data frame
+
+```{r, eval=FALSE}
+set.seed(523)
+d = data.frame(matrix(rnorm(1e5 * 10),ncol=10))
+```
+
+* Implement functions that will find the largest value in each *row* using
+    
+    * The `apply` function
+    * A single `for` loop
+    * dplyr
+
+* Benchmark all of your preceding functions using data frame `d`, which is the fastest, why do you think this is the case? 10 replicates per function is sufficient.
+
+* Construct a smaller subset of `d` by taking only the first 100 rows, rerun your benchmarks on this smaller subset, did anything change?
+
+

@@ -1,0 +1,169 @@
+---
+layout: page
+title: Introduction to make
+reading: "<a href='http://kbroman.org/minimal_make/'>minimal make</a>, <a href='http://bost.ocks.org/mike/make/'>Why use make</a>"
+notes: ""
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: true
+link: true
+---
+
+# make
+
+## make
+
+* Automatically build software / libraries / documents by specifying dependencies via a `Makefile`
+
+* Originally created by Stuart Feldman in 1976 at Bell Labs
+
+* Almost universally available (all flavors of unix / linux / osx)
+
+## Makefile
+
+A `Makefile` provides a list of target files along with their dependencies and the steps necessary to generate each of the targets.
+
+```make
+target1: depend1 depend2 depend3 ...
+    step1
+    step2
+    step3
+    ...
+
+depend1: depend1.1
+    step1
+    step2
+```
+
+## Makefile (simple example)
+
+```make
+paper.html: paper.Rmd Fig1/fig.png Fig2/fig.png
+    Rscript -e "library(rmarkdown);render('paper.Rmd')"
+
+Fig1/fig.png: Fig1/fig.R
+    cd Fig1;Rscript fig.R
+
+Fig2/fig.png: Fig2/fig.R
+    cd Fig2;Rscript fig.R
+```
+
+## Intelligent Building
+
+Because the `Makefile` specifies the dependency structure `make` knows when a file has changed (by examining the file's modification timestamp) and only runs the steps that depend on the file(s) that have changed.
+
+<br/>
+
+* After running `make` the first time, I edit `paper.Rmd`, what steps run if I run `make` again?
+
+* What about editing `fig1.R`?
+
+
+## Variables
+
+Like R or shell scripts or almost any other language we can define variables
+
+```make
+R_OPTS=--no-save --no-restore --no-site-file --no-init-file --no-environ
+
+Fig1/fig.png: Fig1/fig.R
+    cd Fig1;Rscript $(R_OPTS) fig.R
+```
+
+## Special Targets {.smaller}
+
+By default is you run `make` with arguments it will attempt to build the first target in the `Makefile` whose name does not start with a `.`. By convention we often include an `all` target which explicitly specifies how to build everything within the project.
+
+<br/>
+
+`all` is an example of what is called a phony target - because there is no `all` file in the directory. Other common phony targets:
+
+* clean - remove any files created by the Makefile, restores to the original state
+
+* install - for software packages, installs the compiled programs / libraries / headers
+
+<br/>
+
+
+We list all phony targets by including the line like the following:
+
+```make
+.PHONY: all clean all
+```
+
+
+## Builtin Variables
+
+* `$@` &nbsp;&nbsp; the file name of the target
+
+* `$<` &nbsp;&nbsp; the name of the first dependency
+
+* `$^` &nbsp;&nbsp; the names of all dependencies
+
+* `$(@D)` &nbsp;&nbsp; the directory part of the target
+
+* `$(@F)` &nbsp;&nbsp; the file part of the target
+
+* `$(<D)` &nbsp;&nbsp; the directory part of the first dependency
+
+* `$(<F)` &nbsp;&nbsp; the file part of the first dependency
+
+
+## Pattern Rules
+
+Often we want to build several files in the same way, in these cases we can use `%` as a special wildcard character to match both targets and dependencies.
+
+So we can go from
+
+```make
+Fig1/fig.png: Fig1/fig.R
+    cd R;Rscript fig.R
+
+Figs2/fig.png: Fig1/fig.R
+    cd R;Rscript fig.R
+```
+
+to
+
+```make
+Fig%/fig.png: Fig%/fig.R
+    cd $(<D);Rscript $(<F)
+```
+
+## Makefile (fancy example)
+
+```make
+all: paper.html
+
+paper.html: paper.Rmd Fig1/fig.png Fig2/fig.png
+    Rscript -e "library(rmarkdown);render('paper.Rmd')"
+
+Fig%/fig.png: Fig%/fig.R
+    cd $(<D);Rscript $(<F)
+
+clean:
+    rm -f paper.html
+    rm -f Fig*/*.png
+
+.PHONY: all clean
+```
+
+
+## HW4's Makefile
+
+<br/><br/><br/><br/>
+
+<div class="centered">
+<div style="font-size:175%">
+Live Demo
+</div>
+</div>
+
+
+# Acknowledgments
+## Acknowledgments
+
+Above materials are derived from the following sources:
+
+* Karl Broman - [minimal make](http://kbroman.org/minimal_make/)

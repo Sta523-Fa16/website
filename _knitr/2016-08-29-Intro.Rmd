@@ -1,0 +1,74 @@
+---
+layout: page
+title: Introduction
+reading: "Codeschool - <a href='https://www.codeschool.com/courses/try-r'>Try R</a>"
+notes: ""
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: true
+link: true
+---
+
+
+## Policies {.smaller}
+
+* Plagiarism
+    + Use online resources but make sure to cite them
+    + No direct code sharing between groups / individuals
+* Homework
+    + Group based, everyone is equally responsible
+* Late work
+    + late, but same day: -10%
+    + late, next day:  -20%
+    + 2 days or later: no credit
+* Exams
+    + 2 Midterms & 1 Final, take home
+
+## Grading
+
+
+  Component      Percentage
+-------------  --------------
+Participation    10%
+Homework         50%
+Midterm 1        15%
+Midterm 2        15%
+Final Project    10%
+
+
+
+## Groups
+
+* Group homework assignments
+    + Roughly biweekly assignments
+    + Open ended
+    + 10 - 20 hours of work each
+    + Peer review at the end
+
+* Expectations and roles
+    + Everyone is expected to contribute equally
+    + Everyone is expected to understand *all* code turned in
+    + Individual contribution evaluated by peer assessment
+
+* Survey
+
+
+## Reproducible Research / Computing
+
+* Unix shell
+
+* R + RStudio
+
+* rmarkdown + make
+
+* Git + github
+
+
+## For Wednesday
+
+* Create a github account
+* Complete the course survey (email tonight)
+* Install recommended [software](https://stat.duke.edu/~cr173/Sta323_Sp16/software/)
+* MSS/MSEM - Email if can't login in to [saxon](http://saxon.stat.duke.edu:8787)
+    * If no DSS affiliation, wait until I email about accounts being created.

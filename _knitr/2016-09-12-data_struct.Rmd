@@ -1,0 +1,441 @@
+---
+layout: page
+title: R data structures
+reading: "Adv-R - <a href='http://adv-r.had.co.nz/Data-structures.html'>Data Structures</a>"
+notes: ""
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: true
+link: true
+---
+
+
+
+## Data structures and dimensionality {.flexbox .vcenter}
+
+----------------------------------------------------
+  Dimensions        Homogeneous      Heterogeneous
+--------------    ---------------  -----------------
+  1*d*              Vector           List
+                  (atomic vector)  (generic vector)
+
+  2*d*              Matrix           Data Frame
+
+  n*d*              Array            ---
+----------------------------------------------------
+
+# Vectors
+
+## Atomic Vectors {.smaller}
+
+R has six atomic vector types: 
+
+  typeof        mode        storage.mode
+------------  ----------  ----------------
+logical       logical     logical
+double        numeric     double
+integer       numeric     integer
+character     character   character
+complex       complex     complex
+raw           raw         raw
+
+<br/>
+
+For now we'll only worry about the *first four*.
+
+## Vector types {.smaller}
+
+**logical** - boolean values `TRUE` and `FALSE`
+
+```{r}
+typeof(TRUE)
+```
+
+**character** - character strings
+
+```{r}
+typeof("hello")
+typeof('world')
+```
+
+## {.smaller}
+
+**double** - floating point numerical values (default numerical type)
+
+```{r}
+typeof(1.33)
+typeof(7)
+```
+
+**integer** - integer numerical values (indicated with an `L`)
+
+```{r}
+typeof( 7L )
+typeof( 1:3 )
+```
+
+## Concatenation
+
+Atomic vectors can be constructed using the `c()` function, *note* that vectors are always flat.
+
+```{r}
+c(1,2,3)
+c("Hello", "World!")
+c(1,c(2, c(3)))
+```
+
+## Testing types
+
+`typeof(x)` - returns a character vector of the type of object `x`.
+
+<br/>
+
+`is.logical(x)` - returns `TRUE` if `x` has type logical.
+
+`is.character(x)` - returns `TRUE` if `x` has type character.
+
+`is.double(x)` - returns `TRUE` if `x` has type double.
+
+`is.integer(x)` - returns `TRUE` if `x` has type integer.
+
+<br/>
+
+`is.numeric(x)` - returns `TRUE` if `x` has *mode* numeric.
+
+
+## 
+
+```{r}
+is.numeric(7L)
+is.numeric(7)
+```
+
+```{r}
+typeof(7L)
+typeof(7)
+```
+
+## {.smaller}
+
+``is.atomic(x)`` - returns `TRUE` if `x` is an atomic vector.
+
+``is.vector(x)`` - returns `TRUE` if `x` is any type of vector (e.g. atomic vector or list).
+
+```{r}
+is.atomic(c(1,2,3))
+is.vector(c(1,2,3))
+is.atomic(list(1,2,3))
+is.vector(list(1,2,3))
+```
+
+## Coercion
+
+R is a dynamically typed language -- it will happily convert between the various types without complaint.
+
+```{r}
+c(1,"Hello")
+c(FALSE, 3L)
+c(1.2, 3L)
+```
+
+## Operator coercion {.smaller}
+
+Functions and operators with attempt to coerce object to an appropriate type
+
+```{r}
+3.1+1L
+log(TRUE)
+TRUE & 7
+FALSE | !5
+```
+
+## Explicit Coercion
+
+Most of the `is` functions we just saw have an `as` variant which can be used for *explicit* coercion.
+
+
+```{r}
+as.logical(5.2)
+as.character(TRUE)
+as.integer(pi)
+```
+
+##
+
+```{r}
+as.numeric(FALSE)
+as.double("7.2")
+as.double("one")
+```
+
+## Missing Values
+
+R uses `NA` to represent missing values in its data structures, what may not be obvious is that there are different `NA`s for the different types.
+
+```{r}
+typeof(NA)
+typeof(NA+1)
+typeof(NA+1L)
+```
+
+## Contagiousness of Missing Values {.smaller}
+
+Because `NA`s represent missing values it makes sense that any calculation using them should also be missing.
+
+<div class="columns-2">
+```{r}
+1 / NA
+NA * 5
+mean(c(1,2,3,NA))
+3^NA
+```
+</div>
+
+This makes sense but can be problematic in some cases (particularly for control flow)
+
+```{r include=FALSE}
+w = options()$width
+options(width=45)
+```
+
+<div class="columns-2">
+```{r error=TRUE}
+1 == NA
+if (2 != NA)
+  print("Here")
+```
+
+```{r include=FALSE}
+options(width=w)
+```
+
+</div>
+
+## Testing for NA
+
+To explicitly test if a value is missing it is necessary to use `is.na` (often along with `any` or `all`).
+
+```{r}
+is.na(NA)
+is.na(1)
+is.na(c(1,2,3,NA))
+any(is.na(c(1,2,3,NA)))
+all(is.na(c(1,2,3,NA)))
+```
+
+
+
+## Other Special (floating point) Values {.smaller}
+
+`NaN` - Not a number
+
+`Inf` - Positive infinity
+
+`-Inf` - Negative infinity
+
+<br/>
+
+<div class="columns-2">
+```{r}
+pi / 0
+0 / 0
+1/0 + 1/0
+1/0 - 1/0
+NaN / NA
+NaN * NA
+```
+</div>
+
+
+## Testing for infinity and NaN
+
+`NaN` and `Inf` don't have the same testing issues that `NA` has, but there are still convenience functions for testing for 
+
+```{r}
+is.finite(-Inf)
+is.finite(1/0+1/0)
+is.nan(1/0-1/0)
+```
+
+
+## Coercion for infinity and NaN {.smaller}
+
+First remember that `Inf`, `-Inf`, and `NaN` are exclusively of type double, however their coercion behavior is not the same as for other double values.
+
+<div class="columns-2">
+```{r}
+as.integer(Inf)
+as.logical(Inf)
+as.logical(NaN)
+as.character(Inf)
+as.character(NaN)
+```
+<br/>
+</div>
+
+
+## Exercise 1 {.smaller}
+
+**Part 1**
+
+What is the type of the following vectors? Explain why they have that type.
+
+* `c(1, NA+1L, "C")`
+* `c(1L / 0, NA)`
+* `c(1:3, 5)`
+* `c(3L, NaN+1L)`
+* `c(NA, TRUE)`
+
+<br/>
+
+**Part 2**
+
+Considering only the four (common) data types, what is R's implicit type conversion hierarchy (from highest priority to lowest priority)? Hint - think about the pairwise interactions between types.
+
+## Lists
+
+Lists are _generic vectors_, in that they are 1d and can contain any combination of R objects.
+
+```{r}
+list("A", c(TRUE,FALSE), (1:4)/2, function(x) x^2)
+```
+
+##
+
+```{r}
+str( list("A", c(TRUE,FALSE), (1:4)/2, function(x) x^2) )
+```
+
+## Recursive lists
+
+Lists can even contain other lists, meaning they don't have to be flat
+
+```{r}
+str( list(1, list(2, list(3))) )
+```
+
+## List Coercion
+
+By default a vector will be coerced to a list (as a list is more generic) if needed
+
+```{r}
+str( c(1:3,list(4,5,list(6,7))) )
+```
+
+##
+
+We can force a list back to a vector using `unlist`
+
+```{r}
+unlist(list(1:3, list(4:5, 6)))
+unlist( list(1, list(2, list(3, "Hello"))) )
+```
+
+<br/>
+
+Note that this also has the effect of flattening the list (since atomic vectors must be flat).
+
+
+## Named lists
+
+Because of their more complex structure we often want to name the elements of a list (we can also do this with vectors). This can make reading and accessing the list more straight forward.
+
+```{r}
+str(list(A = 1, B = list(C = 2, D = 3)))
+list("knock knock" = "who's there?")
+names(list(ABC=1, DEF=list(H=2, I=3)))
+```
+
+## Exercise 2  {.smaller}
+
+Represent the following JSON data as a list in R.
+
+```json
+{
+  "firstName": "John",
+  "lastName": "Smith",
+  "age": 25,
+  "address": 
+  {
+    "streetAddress": "21 2nd Street",
+    "city": "New York",
+    "state": "NY",
+    "postalCode": 10021
+  },
+  "phoneNumber": 
+  [
+    {
+      "type": "home",
+      "number": "212 555-1239"
+    },
+    {
+      "type": "fax",
+      "number": "646 555-4567"
+    }
+  ]
+}
+```
+
+
+# Attributes
+
+## Attributes {.smaller}
+
+Attributes are arbitrary metadata that can be attached to objects in R. Some are special (e.g. class, comment, dim, dimnames, names, etc.) and change the way in which an object is treated by R. 
+
+Attributes are a named list that is attached to every R object, they can be accessed (get and set) individually via the `attr` and collectively via `attributes`.
+
+```{r}
+(x = c(L=1,M=2,N=3))
+attr(x,"names") = c("A","B","C")
+x
+names(x)
+```
+
+##
+
+```{r}
+str(x)
+attributes(x)
+str(attributes(x))
+```
+    
+## Factors
+
+Factor objects are how R stores data for categorical variables (fixed # of discrete values).
+
+```{r}
+(x = factor(c("BS", "MS", "PhD", "MS")))
+str(x)
+typeof(x)
+```
+
+##
+
+A factor is just an integer vector with two attributes: `class` and `levels`.
+
+```{r}
+attributes(x)
+```
+
+## Exercise 3
+
+Construct a factor variable (without using `factor`, `as.factor`, or related functions) that contains the weather forecast for the next 7 days.
+
+* There should be 4 levels - `sun`, `clouds`, `rain`, `snow`.
+
+* Find the weekly forecast from [Weather Underground](http://www.wunderground.com/)
+
+* Start with an *integer* vector and add the appropriate attributes.
+
+* What would you need to do if I decided that I'd prefer to have only three levels: `sun/cloud`, `rain`, `snow`.
+
+
+# Acknowledgments
+## Acknowledgments
+
+Above materials are derived in part from the following sources:
+
+* Hadley Wickham - [Advanced R](http://adv-r.had.co.nz/)
+* [R Language Definition](http://stat.ethz.ch/R-manual/R-devel/doc/manual/R-lang.html)

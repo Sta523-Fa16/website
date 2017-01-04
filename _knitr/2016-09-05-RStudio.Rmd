@@ -1,0 +1,12 @@
+---
+layout: page
+title: Teams and RStudio
+reading: ""
+notes: "Screencast - <a href='https://youtu.be/6xygj6LbMUU'>RStudio</a>, <a href='https://www.youtube.com/watch?v=Pqp2k4oDktw'>wercker</a>, <br/> <a href='hw/hw1.html'>HW1</a> - due Monday 9/12 by 11 pm"
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: false
+link: false
+---
+

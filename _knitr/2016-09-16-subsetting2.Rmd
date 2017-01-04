@@ -1,0 +1,12 @@
+---
+layout: page
+title: Subsetting (cont.)
+reading: ""
+notes: "<a href='hw/hw2.html'>HW2</a> - due Monday 9/26 by 11 pm"
+output:
+    ioslides_presentation:
+        widescreen: true
+slides: false
+link: false
+---
+

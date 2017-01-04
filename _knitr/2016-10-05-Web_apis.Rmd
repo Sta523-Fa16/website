@@ -1,0 +1,9 @@
+---
+layout: page
+title: Web Scraping LQ
+reading: ""
+notes: "<a href='hw/hw4.html'>HW4</a> - due Wednesday 10/19 by 11 pm <br/> Screencast -  <a href='https://youtu.be/-ClPkplS1-I'>Scraping LQ</a>" 
+slides: false
+link: false
+---
+

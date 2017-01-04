@@ -1,0 +1,15 @@
+Gemfile.lock
+.sass-cache
+.DS_Store
+.Dropbox
+.Rhistory
+
+_site/
+slides/
+hw/
+_posts/
+
+_knitr/prev/
+_homework/prev/
+
+teams.md

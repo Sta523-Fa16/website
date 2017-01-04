@@ -1,0 +1,8 @@
+---
+layout: page
+title: Shiny
+reading: "<a href='http://shiny.rstudio.com/'>Shiny Documentation</a>"
+notes: "<a href='hw/hw5.html'>HW5</a> - due Monday 10/31 by 11 pm <br/> Screencast -  <a href='https://youtu.be/99zwcPncbSs'>Shiny Example</a>" 
+slides: false
+link: false
+---

@@ -1,0 +1,13 @@
+---
+layout: page
+title: Raster Data in R
+reading: ""
+notes: "Screencast - <a href='https://youtu.be/a9m1-LKqduc'>Precinct Modeling</a>"
+output: 
+    ioslides_presentation:
+        widescreen: true
+        smaller: true
+slides: false
+link: false
+---
+

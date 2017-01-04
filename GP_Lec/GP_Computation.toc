@@ -1,0 +1,6 @@
+\beamer@endinputifotherversion {3.36pt}
+\select@language {english}
+\beamer@sectionintoc {1}{Background}{2}{0}{1}
+\beamer@sectionintoc {2}{Migratory Bird Spatial Assignment Model}{13}{0}{2}
+\beamer@sectionintoc {3}{Speciated PM$_{2.5}$ Modeling}{32}{0}{3}
+\beamer@sectionintoc {4}{GPUs and Low Rank Approximations}{46}{0}{4}

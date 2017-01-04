@@ -1,0 +1,8 @@
+---
+layout: page
+title: RNGs and ABC
+reading: ""
+notes: "<a href='https://r.amherst.edu/apps/nhorton/Shiny-Bayes/'>Beta-Binomial Shiny App</a> <br/> Screencast - <a href='https://www.youtube.com/attribution_link?a=URJvp-bS7cY&u=/watch%3Fv%3DuSsE5NHGuuY%26feature%3Dem-upload_owner'>ABC Example</a>"
+slides: false
+link: false
+---

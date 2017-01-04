@@ -1,0 +1,373 @@
+---
+layout: page
+title: Functional Programming
+reading: "R4DS - <a href='http://r4ds.had.co.nz/lists.html'>lists</a>, <a href='http://r4ds.had.co.nz/iteration.html#the-map-functions'>map functions</a> <br/> <a href='https://jennybc.github.io/purrr-tutorial/index.html'>Purrr tutorial</a>"
+notes: ""
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: true
+link: true
+---
+
+```{r echo=FALSE, message=FALSE}
+options(width = 110)
+library(purrr)
+library(magrittr)
+```
+
+# Functional Programming
+
+## Functional Programming
+
+* First order functions 
+
+* Pure functions
+
+* Anonymous functions
+
+* Vectorized functions
+
+* *Closures*
+
+* *Recursion*
+
+
+# Apply functions
+
+## Apply functions {.smaller}
+
+The apply functions are a collection of tools for functional programming in R, they are variations of the `map` function
+
+```{r, eval=FALSE}
+??apply
+## 
+## Help files with alias or concept or title matching ‘apply’ using fuzzy
+## matching:
+## 
+## base::apply             Apply Functions Over Array Margins
+## base::.subset           Internal Objects in Package 'base'
+## base::by                Apply a Function to a Data Frame Split by Factors
+## base::eapply            Apply a Function Over Values in an Environment
+## base::lapply            Apply a Function over a List or Vector
+## base::mapply            Apply a Function to Multiple List or Vector Arguments
+## base::rapply            Recursively Apply a Function to a List
+## base::tapply            Apply a Function Over a Ragged Array
+```
+
+## lapply {.smaller}
+
+Usage: `lapply(X, FUN, ...)`
+
+`lapply` returns a list of the same length as `X`, each element of which is the result of applying `FUN` to the corresponding element of `X`.
+
+<br/>
+
+<div class="columns-2">
+```{r}
+lapply(1:8, sqrt) %>% str()
+lapply(1:8, function(x) (x+1)^2) %>% str()
+```
+</div>
+
+## {.smaller}
+
+```{r}
+lapply(1:8, function(x, pow) x^pow, pow=3) %>% str()
+lapply(1:8, function(x, pow) x^pow, x=2) %>% str()
+```
+
+## 
+
+```{r}
+d = list(n = rnorm(100), e = rexp(100), ln = rlnorm(100))
+lapply(d, quantile) %>% str()
+```
+
+
+## sapply {.smaller}
+
+Usage: `sapply(X, FUN, ..., simplify = TRUE, USE.NAMES = TRUE)`
+
+`sapply` is a user-friendly version and wrapper of `lapply` by default returning a vector, matrix or, an array if appropriate.
+
+<br/>
+
+```{r}
+sapply(1:8, sqrt)
+sapply(1:8, function(x) (x+1)^2)
+```
+
+##
+
+```{r}
+sapply(1:8, function(x) c(x, x^2, x^3, x^4))
+sapply(1:8, function(x) list(x, x^2, x^3, x^4))
+```
+
+## 
+
+```{r, echo=FALSE}
+set.seed(2014915)
+```
+
+```{r}
+d = list(norm = rnorm(100), exp = rexp(100), log_norm = rlnorm(100))
+sapply(d, quantile)
+```
+
+##
+
+```{r}
+sapply(2:6, seq)
+```
+
+
+## vapply {.smaller}
+
+Usage: `vapply(X, FUN, FUN.VALUE, ..., USE.NAMES = TRUE)`
+
+`vapply` is similar to `sapply`, but has a pre-specified type of return value, so it can be safer (and sometimes faster) to use.
+
+
+```{r}
+d = list(1:3, 1:7, c(1,1,2,3,4))
+```
+
+<div class="columns-2">
+```{r, error=TRUE}
+sapply(d, function(x) x[x==2])
+sapply(d, function(x) x[x==1]) %>% str()
+```
+
+```{r, error=TRUE}
+vapply(d, function(x) x[x==2], 1)
+vapply(d, function(x) x[x==1], 1)
+```
+<br/>
+</div>
+
+##
+
+
+```{r, error=TRUE}
+vapply(1:3, function(x) c(x,letters[x]), c(1,1))
+vapply(1:3, function(x) c(x,letters[x]), c("",""))
+```
+
+## [ls]apply and data frames {.smaller}
+
+We can easily use these functions with data frames, the key is to remember that a data frame is just a fancy list with atomic vector columns of the same length.
+
+```{r}
+df = data.frame(a = 1:6, b = letters[1:6], c = c(TRUE,FALSE))
+lapply(df, class) %>% str()
+sapply(df, class)
+```
+
+## lapply and do.call {.smaller}
+
+By default (usually) the results of each function call within an `sapply` are placed into the columns of the results matrix. If we'd rather have the results form the rows of our results, if for example we were constructing a data frame, a useful approach is the combination of `lapply` and `do.call`.
+
+<div class="columns-2">
+```{r}
+l = lapply(1:8, function(x) list(LETTERS[x], x, x^2, x^3, x^4))
+str(l)
+```
+```{r}
+do.call(rbind, l)
+```
+</div>
+
+##
+
+`do.call(rbind, l)` is the equivalent of passing all the elements of `l` as arguments to `rbind`, e.g.
+
+```{r}
+rbind(l[[1]], l[[2]], l[[3]], l[[4]],
+      l[[5]], l[[6]], l[[7]], l[[8]])
+```
+
+##
+
+```{r}
+l2 = lapply(1:8, function(x) data.frame(x, x^2, x^3, x^4))
+do.call(rbind, l2)
+```
+
+
+
+## apply {.smaller}
+
+Usage: `apply(X, MARGIN, FUN, ...)`
+
+Apply a function to margins of an array, matrix, or data frame.
+
+<div class="columns-2">
+```{r}
+(m = matrix(1:12, nrow=4, ncol=3))
+apply(m, 1, mean)
+apply(m, 2, mean)
+apply(m, 1:2, mean)
+```
+</div>
+
+## 
+
+```{r}
+(df = data.frame(a=1:3, b=4:6, c=7:9))
+```
+
+<div class="columns-2">
+```{r}
+apply(df, 1, mean)
+apply(df, 1, mean) %>% str()
+```
+<br/>
+```{r}
+apply(df, 2, mean)
+apply(df, 2, mean) %>% str()
+```
+</div>
+
+## {.smaller}
+
+<div class="columns-2">
+
+```{r}
+(a = array(1:27,c(3,3,3)))
+```
+<br/>
+```{r}
+apply(a, 1, sum)
+apply(a, 2, sum)
+apply(a, 3, sum)
+apply(a, 1:2, sum)
+```
+</div>
+
+
+## tapply {.smaller}
+
+Usage: `tapply(X, INDEX, FUN = NULL, ..., simplify = TRUE)`
+
+Apply a function to each (non-empty) group of values from `X` as specified by a unique combination of the levels of `INDEX`.
+
+<div class="columns-2">
+
+```{r}
+(df = data.frame(data = 3:11, cat1 = rep(1:3,3), 
+                 cat2=rep(1:2,c(4,5))))
+```
+<br/>
+
+```{r}
+tapply(df$data, df$cat1, sum)
+tapply(df$data, df[,2:3], sum)
+```
+
+</div>
+
+
+# purrr
+
+## purrr
+
+![](imgs/purrr.png)
+
+A Hadley package which improves functional programming in R with a focus on pure and type stable functions.
+
+
+## Map functions
+
+Basic functions for looping over an object and returning a value (of a specific type) - replacement for `lapply`/`sapply`/`vapply`.
+
+* `map()` - returns a list.
+
+* `map_lgl()` - returns a logical vector.
+
+* `map_int()` - returns a integer vector.
+
+* `map_dbl()` - returns a double vector.
+
+* `map_chr()` - returns a character vector.
+
+* `map_df()` - returns a data frame.
+
+* `walk()` - returns nothing, call function exclusively for its side effects
+
+
+## Type Consistency {.smaller}
+
+R is a weakly / dynamically typed language which means there is no way to define a function which enforces the argument or return types.
+
+This flexibility can be useful at times, but often it makes it hard to reason about your code and requires more verbose code to handle edge cases.
+
+```{r error=TRUE}
+map_dbl(list(rnorm(1e3),rnorm(1e3),rnorm(1e3)), mean)
+map_chr(list(rnorm(1e3),rnorm(1e3),rnorm(1e3)), mean)
+map_int(list(rnorm(1e3),rnorm(1e3),rnorm(1e3)), mean)
+```
+
+
+## Purrr shortcut - Anonymous Functions {.smaller}
+
+An anonymous function is one that is never given a name (assigned to a variable)
+
+```{r}
+sapply(1:10, function(x) x^(x+1))
+```
+
+purrr lets us write anonymous functions using one sided formulas where the first arguments 
+
+```{r}
+map_dbl(1:10, ~ .^(.+1))
+```
+
+## Purrr shortcut - Lookups {.smaller}
+
+Very often we want to extract only certain (named) values from a list, `purrr` provides a shortcut for this operation when you provide either a character or numeric value instead of a function to apply.
+
+
+```{r}
+x = list(list(a=1L,b=2L,c=list(d=3L,e=4L)),
+         list(a=5L,b=6L,c=list(d=7L,e=8L)))
+```     
+
+<div class="columns-2">
+
+```{r}
+map_int(x, "a")
+map_dbl(x, c("c","e"))
+```
+<br/><br/><br/>
+
+```{r}
+map_df(x, 3)
+map_chr(x, c(3,1))
+```
+
+</div>
+
+## Live demo
+
+
+
+
+# Acknowledgments
+
+## Acknowledgments
+
+Above materials are derived in part from the following sources:
+
+* Hadley Wickham - [Adv-R Functionals](http://adv-r.had.co.nz/Functionals.html)
+
+* Hadley Wickham - [R for Data Science](http://r4ds.had.co.nz/)
+
+* Neil Saunders - [A brief introduction to "apply" in R](http://nsaunders.wordpress.com/2010/08/20/a-brief-introduction-to-apply-in-r/)
+
+* Jenny Bryan - [Purrr Tutorial](https://jennybc.github.io/purrr-tutorial/)
+
+* [R Language Definition](http://stat.ethz.ch/R-manual/R-devel/doc/manual/R-lang.html)
+
+

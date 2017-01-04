@@ -1,0 +1,11 @@
+---
+layout: page
+title: Work on HW2
+reading: ""
+notes: "Screencast - <a href='https://youtu.be/Llbw6wH-P-8'>dynamic column names example</a>"
+output:
+    ioslides_presentation:
+        widescreen: true
+slides: false
+link: false
+---

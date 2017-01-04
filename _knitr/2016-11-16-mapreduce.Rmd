@@ -1,0 +1,9 @@
+---
+layout: page
+title: Map reduce
+reading: ""
+notes: "Screencast - <a href='https://youtu.be/5kHXAIOGRes'>mapreduce example</a>"
+slides: false
+link: false
+---
+

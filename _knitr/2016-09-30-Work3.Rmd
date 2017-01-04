@@ -1,0 +1,11 @@
+---
+layout: page
+title: Work on HW3
+reading: ""
+notes: "HW3 - due Monday 10/03 by 11 pm"
+output:
+    ioslides_presentation:
+        widescreen: true
+slides: false
+link: false
+---

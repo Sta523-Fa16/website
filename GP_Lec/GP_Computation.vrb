@@ -1,0 +1,16 @@
+\frametitle{Low Rank Approximations and GPUs}
+
+Both predictive process and random matrix low rank approximations are good candidates for acceleration using GPUs.
+
+\begin{itemize}
+\item Both use Sherman-Woodbury-Morrison to calculate the inverse (involves matrix multiplication, addition, and a small Matrix inverse).
+
+\item Predictive processes involves several covariance matrix calculations (knots and cross-covariance) and a small matrix inverse.
+
+\item Random matrix low rank involves a large matrix multiplication ($\bm{A}\bm{\Omega}$) and several small matrix decompositions (QR, eigen).
+
+\item Functionality for both approaches included in current version of RcppGP (inv\_lr and
+inv\_pp).
+
+\end{itemize}
+

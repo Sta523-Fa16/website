@@ -1,0 +1,9 @@
+---
+layout: page
+title: Project
+reading: ""
+notes: "Project Proposal - due Wed 11/23"
+slides: false
+link: false
+---
+

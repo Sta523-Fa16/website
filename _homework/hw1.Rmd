@@ -1,0 +1,47 @@
+---
+layout: page
+title: Homework 1 - FizzBuzz
+---
+
+<br/>
+<div style="text-align:center">
+![](imgs/fizzbuzz.jpg)
+</div>
+
+## Background
+
+The FizzBuzz test is a common programming interview question used to establish if a candidate can actually program in a language that they claim experience in.
+
+The problem statement is as follows:
+
+> "Write a program that prints the numbers from 1 to 100, each on their own line. But for multiples of three print "Fizz" instead of the number and for the multiples of five print "Buzz". For numbers which are multiples of both three and five print "FizzBuzz"."
+
+<br/>
+
+## Task 1 - Implement FizzBuzz 
+
+Your goal here is to implement FizzBuzz as a generalized function in R called `fizzbuzz`. Your `fizzbuzz` function should conform to the description provided above in terms of output, but should accept an integer argument (which can either be a scalar or vector). As such, your function should correctly print `Fizz`, `Buzz`, `FizzBuzz`, or the actual number for each integer supplied on a separate line. You should program defensively - validate any input and make sure that you have a sane response to any invalid input.
+
+You must also include a write up of your implementation that broadly describes how you approached the problem and constructed your solution (think something along the lines of the methods section of a journal article). 
+
+This is not a terribly complex or difficult task, and solutions in R and many other languages are easily Googleable - the point of this exercise is to get use to the workflow and tools we will be using in this class. This includes RStudio, RMarkdown, git, GitHub, Wercker, etc. - so use this homework as opportunity to familiarize yourself and get comfortable with these tools as we will be using them throughout the rest of the semester.
+
+<br/>
+
+## Task 2 - FizzBuzz validation
+
+Use your FizzBuzz function to display the correct output for a variety of inputs, make sure to show what happens for both good and bad input. Some sample test cases have been provided in the template, feel free to add any additional test cases you thing are interesting / useful.
+
+<br/><br/>
+
+## Submission and Grading
+
+This homework is due by *11 pm Monday, September 12th*. You are to complete the assignment as a group and to keep everything (code, write ups, etc.) on your team's github repository (commit early and often). All team members are expected to contribute equally to the completion of this assignment and group assessments will be given at its completion - anyone judged to not have sufficient contributed to the final product will have their grade penalized. While different teams members may have different coding backgrounds and abilities, it is the responsibility of every team member to understand how and why all code in the assignment works.
+
+The final product for this assignment should be a single Rmd document (a template of which will be provided) that contains all code and text for the tasks described above. This document should be clearly and cleanly formated and present all of your results. Style and formating does count for this assignment, so please take the time to make sure everything looks good and your text and code are properly formated. This document must be reproducible and I must be able to compile it with minimal intervention - documents that do not compile will be given a 0. 
+
+To help with this goal, we will be using the Wercker continuous integration platform to test all of your code submissions. Everytime you push to github Wercker will attempt to compile your Rmd file and report back on its status. If Wercker is reporting that the build passes then your Rmd document can be cleanly compiled.
+
+For the time being I will not enforce any particular coding style, however it is important that the code you and your team produces is *readable* and *consistent* in its formating. There are several R style guides online, e.g. from [Google](https://google-styleguide.googlecode.com/svn/trunk/Rguide.xml) and from [Hadley Wickham](http://r-pkgs.had.co.nz/style.html). As a group you should decide on what conventions you will use and the entire team should conform to them as much as possible.
+
+<br/>

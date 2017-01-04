@@ -1,0 +1,12 @@
+---
+layout: page
+title: Data Visualization and Exploration
+reading: ""
+notes: ""
+output: 
+    ioslides_presentation:
+        widescreen: true
+slides: false
+link: false
+---
+

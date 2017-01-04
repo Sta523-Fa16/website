@@ -1,0 +1,59 @@
+---
+layout: page
+title: "Homework 5 - Big data?"
+---
+
+<br/>
+<div style="text-align:center">
+<img src="imgs/big_data.png" width="40%">
+</div>
+<br/>
+
+## Background
+
+Todd Schneider maintains a github repository with scripts and tools for downloading data on more than 1.3 billion taxi and uber originating in New York city. These data come from the NYC Taxi & Limousine Commission (yellow and green cabs) and from Uber via a Freedom of Information Law request by FiveThirtyEight. The raw data is quite large, roughly 214G on disk on Saxon. 
+
+Since we are not using a true Spark cluster you will only be asked to look at monthly subsets of the data which are any where from 100M - 3G csv files. The goal here is to familiarize yourself with the functionality and limitations of the `sparkr` and `sparklyr`. Example code for initializing and performing basic analyses with both packages is available from the [Team0_hw7 repo](https://github.com/Sta523-Fa16/Team0_hw7).
+
+
+
+## Task 1 - Pickup and Dropoff Heatmaps
+
+Pick a month that has data for Yellow cabs, Green cabs, and ubers. Using either `sparkr` or `sparklyr` read all three monthly data sets into Spark. Using *only* the spark engine spatially aggregate the pickup and dropoff locations and count the number of pickups or dropoffs that occurred in that location. Hint - rounding latitude and longitudes before grouping will allow us to create a poor man's raster - changing the number of digits to round will allow you to increase or decrease the number of aggregation locations. Aggregated results should then be brought back into R via the `collect` function.
+
+Plot your returned data using the longitude and latitude as your x and y coordinates and determine the alpha (transparency) based on the counts (more pickups / dropoffs should be more opaque). You will need to arrive at a reasonable mapping between the counts and your alpha value, don't just limit yourself to a linear transformation - experiment and see what looks best. A fake raster like plot can be created by playing with the plot character and its size.
+
+The final goal is to produce 3 plots, a plot of *all* yellow and green cab pickups together (with points colored by cab type), a plot of *all* yellow and green cab dropoffs, and finally a plot of all uber pickups. Compare the three plots are there any obvious similarities or differences between them? Can we infer any patterns about the commuting patterns of New Yorkers?
+
+
+## Task 2 - Rush hour?
+
+Here we will repeat the data analysis and plotting from Task 1 but we will add the additional factor of rush hour. Before aggregating, add a new column to each Spark Data Frame that indicates whether *either* the pickup or dropoff occured during the morning rush hours (7 - 10 am). This column should have values TRUE when either the pickup or dropoff occur during these hours or FALSE if not.
+
+This additional column should then be used in the aggregation step to create a data set that has results for both rush hour and non-rush hour times. For each of these groups create each of the three plots described in Task 1. Once again compare the six plots and describe any obvious similarities or differences between them. Now can we infer any patterns about the commuting patterns of New Yorkers?
+
+
+## Extra Credit
+
+When demoing Sparklyr in class (using the June 2016 yellow cab data) we obtained a weird result, 234.9%, for the average tip percentage for yellow cab pickups on Tuesdays at 4 pm. When the SparkR implementation was updated (see github for revised code) to calculate tip percentage it also showed this result. However, when we filter the data to only include trips that started on Tuesdays at 4 pm and calculate the average of that column directly we get a different answer, 14.07%.
+
+As of yet I have not been able to track down the cause of this discrepancy, but it appears to also be an issue with other weekday and hour combinations (but not nearly as extreme a difference). 
+
+Track down the source of this bug as best you are able, whether this issue is in my code (most likely) or in the way Spark handles group bys (much less likely). 
+
+Points will be awarded for through documentation of the issue and creation of a minimal working example that demonstrates the issue.
+
+
+## Work Product
+
+* `hw7.Rmd` - Write up and describe your implementation and answer the questions asked in Task 1 and Task2. 
+
+* Spark tasks - I recommend having a separate file that contains all of your Spark related code since the processing times can be upwards of several minutes. This file should initialize spark, perform your analysis, and save the resulting data frames to an Rdata file. Your Rmd file can then load this file and then produce any necessary plots. A Makefile is not necessary, but good practice would be for your Rmd to check for the existence of the Rdata file and if not found rerun the necessary code to generate it.
+
+<br/>
+
+## Submission and Grading
+
+This homework is due by 11:59 pm Monday, December 19th. You are to complete the assignment as a group and to keep everything (code, write ups, etc.) on your team's github repository (commit early and often). All team members are expected to contribute equally to the completion of this assignment and group assessments will be given at its completion - anyone judged to not have sufficient contributed to the final product will have their grade penalized. While different teams members may have different coding backgrounds and abilities, it is the responsibility of every team member to understand how and why all code in the assignment works.
+
+<br/>

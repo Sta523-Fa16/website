@@ -1,0 +1,13 @@
+---
+layout: page
+title: Polygonization
+reading: ""
+notes: "<a href='scoreboard.html'>HW 6 Scoreboard</a> "
+output: 
+    ioslides_presentation:
+        widescreen: true
+        smaller: true
+slides: false
+link: false
+---
+

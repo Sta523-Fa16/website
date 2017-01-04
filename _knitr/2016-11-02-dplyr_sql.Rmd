@@ -1,0 +1,568 @@
+---
+layout: page
+title: dplyr and SQL
+reading: "<a href='http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html'>dplyr database vignette</a>"
+notes: 
+output: 
+    ioslides_presentation:
+        widescreen: true
+        smaller: false
+slides: true
+link: true
+---
+
+```{r, echo=FALSE, include=FALSE}
+options(width = 110)
+library(dplyr)
+```
+
+
+# The why of databases
+
+## Numbers everyone should know
+
+| Task                                | Timing            |
+|-------------------------------------|-------------------|
+| L1 cache reference                  | 0.5 ns            |
+| L2 cache reference                  | 7 ns              |
+| Main memory reference               | 100 ns            |
+| Read 1 MB sequentially from memory  | 250,000 ns        |
+| Disk seek                           | 10,000,000 ns     |
+| Read 1 MB sequentially from network | 10,000,000 ns     |
+| Read 1 MB sequentially from disk    | 30,000,000 ns     |
+
+<div style="font-size: 10pt">
+From: http://surana.wordpress.com/2009/01/01/numbers-everyone-should-know/
+</div>
+
+
+## Implications for bigish data
+
+Lets imagine we have a *10 GB* flat data file and that we want to select certain rows based on a given criteria. This requires a sequential read across the entire data set.
+
+
+If we can store the file in memory:
+
+* $10~GB \times (250~\mu s / 1~MB) = 0.25$ seconds
+
+If we have to access the file from disk:
+
+* $10~GB \times (30~ms / 1~MB) = 30$ seconds
+
+<br/>
+
+This is just for *reading* data, if we make any modifications (*writing*) things are much worse. 
+
+
+## Implications for big data
+
+What about a *100 GB* flat data file?
+
+If we can store the file in memory:
+
+* $100~GB \times (250~\mu s / 1~MB) = 2.5$ seconds
+
+If we have to access the file from disk:
+
+* $100~GB \times (30~ms / 1~MB) = 300$ seconds
+
+<br/>
+
+This is actually incredibly optimistic since it assumes that all the data on disk can be read in one continuous read.
+
+
+## Blocks
+
+<div class="centered">
+Cost: Disk << Memory
+
+Speed: Disk <<< Memory
+</div>
+
+<br/>
+
+So usually possible to grow our disk storage to accommodate our data. However, memory is usually the limiting resource, and if we can't fit everything into memory?
+
+<br/>
+
+Create *blocks* - group rows based on similar attributes and read in multiple rows at a time. Optimal size will depend on the task and the properties of the disk.
+
+
+
+## Linear vs Binary Search
+
+Even with blocks, any kind of subsetting of rows requires a linear search, which requires $\mathcal{O}(N)$ accesses where $N$ is the number of blocks.
+
+<br/>
+
+We can do much better if we are careful about how we structure our data, specifically sorting some or all of the columns. 
+
+* Sorting is expensive, $\mathcal{O}(N \log N)$, but it only needs to be done once. 
+
+* After sorting, we can use a binary search for any subsetting tasks ($\mathcal{O}(\log N)$).
+
+* These sorted columns are known as *indexes*.
+
+* Indexes require additional storage, but usually small enough to be kept in memory while blocks stay on disk.
+
+
+## Binary Search Example {.smaller}
+
+| Age  | Name         |
+|------|--------------|
+| 19   | Carol        |
+| 20   | Greg         |
+| 21   | Alice        |
+| 21   | Dave         |
+| 22   | Eve          |
+| 23   | Bob          |
+| 23   | Frank        |
+
+<br/><br/>
+
+Lets search for records for people who are 22 or older.
+
+
+## and then?
+
+This is just barely scratching the surface,
+
+* Efficiency gains are not just for disk, access is access
+
+* In general, trade off between storage and efficiency
+
+* Reality is a lot more complicated for everything mentioned so far, lots of very smart people have spent a lot of time thinking about and implementing tools
+
+* Different tasks with different requirements require different implementations and have different criteria for optimization
+
+
+
+## SQL
+
+Structures Query Language is a special purpose language for interacting with (querying and modifying) these indexed tabular data structures. 
+
+* ANSI Standard but with some dialect divergence
+
+* This functionality maps very closely (but not exactly) with the data manipulation verbs present in dplyr.
+
+* We will see this mapping in more detail in a bit.
+
+
+# Back to dplyr
+
+## data
+
+```{r eval=FALSE}
+library(dplyr)
+library(readr)
+library(lubridate)
+library(stringr)
+
+nyc = read_csv("/data/nyc_parking/NYParkingViolations.csv")
+
+##  |================================================================================| 100% 1713 MB
+##   
+##  Warning: 654437 parsing failures.
+##   row                  col   expected actual
+##  2647 Violation Legal Code an integer      T
+##  3792 Violation Legal Code an integer      T
+##  4001 Violation Legal Code an integer      T
+##  4002 Violation Legal Code an integer      T
+##  4003 Violation Legal Code an integer      T
+##  .... .................... .......... ......
+##  .See problems(...) for more details.
+```
+
+## {.smaller}
+
+```{r eval=FALSE}
+nyc
+
+##  Source: local data frame [9,100,278 x 43]
+##  
+##     Summons Number Plate ID Registration State Plate Type Issue Date Violation Code
+##              (dbl)    (chr)              (chr)      (chr)      (chr)          (int)
+##  1      1361929741  FCJ5493                 NY        PAS 12/18/1970             20
+##  2      1366962000  63540MC                 NY        COM 02/02/1971             46
+##  3      1356906515  GFM1421                 NY        PAS 09/18/1971             40
+##  4      1342296217  FYM5117                 NY        SRF 09/18/1971             21
+##  5      1342296199  95V6675                 TX        PAS 09/18/1971             21
+##  6      1342296187  GCY4187                 NY        SRF 09/18/1971             21
+##  7      1337077380  18972BB                 NY        999 10/10/1971             14
+##  8      1364523796  WNJ4730                 VA        PAS 04/05/1973             14
+##  9      1359914924  68091JZ                 NY        COM 07/22/1973             46
+##  10     1355498326  EWV4127                 NY        PAS 08/12/1973             21
+##  ..            ...      ...                ...        ...        ...            ...
+##  Variables not shown: Vehicle Body Type (chr), Vehicle Make (chr), Issuing Agency (chr), Street
+##    Code1 (int), Street Code2 (int), Street Code3 (int), Vehicle Expiration Date (int), Violation
+##    Location (chr), Violation Precinct (int), Issuer Precinct (int), Issuer Code (int), Issuer
+##    Command (chr), Issuer Squad (chr), Violation Time (chr), Time First Observed (chr), Violation
+##    County (chr), Violation In Front Of Or Opposite (chr), House Number (chr), Street Name (chr),
+##    Intersecting Street (chr), Date First Observed (int), Law Section (int), Sub Division (chr),
+##    Violation Legal Code (int), Days Parking In Effect (chr), From Hours In Effect (chr), To Hours
+##    In Effect (chr), Vehicle Color (chr), Unregistered Vehicle? (int), Vehicle Year (int), Meter
+##    Number (chr), Feet From Curb (int), Violation Post Code (chr), Violation Description (chr), No
+##    Standing or Stopping Violation (chr), Hydrant Violation (chr), Double Parking Violation (chr)
+```
+
+
+## Creating an sqlite database {.smaller}
+
+```{r eval=FALSE}
+(db = src_sqlite("/data/nyc_parking/NYParkingViolations.sqlite", create = TRUE))
+
+##  src:  sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  tbls:
+
+nyc_sql = copy_to(db, nyc, temporary = FALSE)
+db
+
+##  src:  sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  tbls: nyc, sqlite_stat1
+
+nyc_sql = tbl(db,"nyc")
+str(nyc_sql)
+
+##  List of 9
+##   $ src      :List of 3
+##    ..$ con :Formal class 'SQLiteConnection' [package "RSQLite"] with 5 slots
+##    .. .. ..@ Id                 :<externalptr> 
+##    .. .. ..@ dbname             : chr "/data/nyc_parking/NYParkingViolations.sqlite"
+##    .. .. ..@ loadable.extensions: logi TRUE
+##    .. .. ..@ flags              : int 6
+##    .. .. ..@ vfs                : chr ""
+##    ..$ path: chr "/data/nyc_parking/NYParkingViolations.sqlite"
+##    ..$ info:List of 2
+##    .. ..$ serverVersion: chr "3.8.6"
+##    .. ..$ results      : logi FALSE
+##    ..- attr(*, "class")= chr [1:3] "src_sqlite" "src_sql" "src"
+##   $ from     :Classes 'ident', 'sql', 'character'  chr "nyc"
+## ...
+```
+
+## {.smaller}
+
+```{r eval=FALSE}
+nyc_sql
+
+##  Source: sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  From: nyc [9,100,278 x 43]
+##  
+##     Summons Number Plate ID Registration State Plate Type Issue Date Violation Code
+##              (dbl)    (chr)              (chr)      (chr)      (chr)          (int)
+##  1      1361929741  FCJ5493                 NY        PAS 12/18/1970             20
+##  2      1366962000  63540MC                 NY        COM 02/02/1971             46
+##  3      1356906515  GFM1421                 NY        PAS 09/18/1971             40
+##  4      1342296217  FYM5117                 NY        SRF 09/18/1971             21
+##  5      1342296199  95V6675                 TX        PAS 09/18/1971             21
+##  6      1342296187  GCY4187                 NY        SRF 09/18/1971             21
+##  7      1337077380  18972BB                 NY        999 10/10/1971             14
+##  8      1364523796  WNJ4730                 VA        PAS 04/05/1973             14
+##  9      1359914924  68091JZ                 NY        COM 07/22/1973             46
+##  10     1355498326  EWV4127                 NY        PAS 08/12/1973             21
+##  ..            ...      ...                ...        ...        ...            ...
+##  Variables not shown: Vehicle Body Type (chr), Vehicle Make (chr), Issuing Agency (chr), Street
+##    Code1 (int), Street Code2 (int), Street Code3 (int), Vehicle Expiration Date (int), Violation
+##    Location (chr), Violation Precinct (int), Issuer Precinct (int), Issuer Code (int), Issuer
+##    Command (chr), Issuer Squad (chr), Violation Time (chr), Time First Observed (chr), Violation
+##    County (chr), Violation In Front Of Or Opposite (chr), House Number (chr), Street Name (chr),
+##    Intersecting Street (chr), Date First Observed (int), Law Section (int), Sub Division (chr),
+##    Violation Legal Code (int), Days Parking In Effect (chr), From Hours In Effect (chr), To Hours
+##    In Effect (chr), Vehicle Color (chr), Unregistered Vehicle? (int), Vehicle Year (int), Meter
+##    Number (chr), Feet From Curb (int), Violation Post Code (chr), Violation Description (chr), No
+##    Standing or Stopping Violation (chr), Hydrant Violation (chr), Double Parking Violation (chr)
+```
+
+
+## Using dplyr with sqlite {.smaller}
+
+```{r, eval=FALSE}
+(addr = nyc_sql %>%
+        select(`Issue Date`, `Issuing Agency`, `Violation Precinct`, `House Number`, `Street Name`) %>%
+        filter(`Violation Precinct` >=1, `Violation Precinct` <= 34)
+)
+
+##  Source: sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  From: nyc [3,564,798 x 5]
+##  Filter: `Violation Precinct` >= 1, `Violation Precinct` <= 34 
+##  
+##     Issue Date Issuing Agency Violation Precinct House Number  Street Name
+##          (chr)          (chr)              (int)        (chr)        (chr)
+##  1  09/18/1971              X                 33         4165     BROADWAY
+##  2  07/22/1973              P                 10           48        7 AVE
+##  3  09/22/1973              P                 14          205      W 39 ST
+##  4  10/30/1973              K                  1           NA SOUTH STREET
+##  5  04/15/1977              X                 17          545        1 AVE
+##  6  01/01/2000              P                 17          875      3RD AVE
+##  7  01/06/2000              P                 20          210      W 64 ST
+##  8  01/07/2000              P                 15         1375        6 AVE
+##  9  01/07/2000              P                 15         1375        6 AVE
+##  10 01/08/2000              P                 19          244      EAST 84
+##  ..        ...            ...                ...          ...          ...
+```
+
+## SQL Query
+
+```{r, eval=FALSE}
+class(addr)
+
+## [1] "tbl_sqlite" "tbl_sql"    "tbl"  
+
+addr$query
+
+##  <Query> SELECT "Issue Date" AS "Issue Date", "Issuing Agency" AS "Issuing Agency", "Violation Precinct" AS "Violation ##  Precinct", "House Number" AS "House Number", "Street Name" AS "Street Name"
+##  FROM "nyc"
+##  WHERE "Violation Precinct" >= 1.0 AND "Violation Precinct" <= 34.0
+##  <SQLiteConnection>
+```
+
+## Limitations
+
+```{r, eval=FALSE}
+addr %>% mutate(address = paste(`House Number`, `Street Name`))
+
+##  Source: sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  Error in sqliteSendQuery(con, statement, bind.data) : 
+##    error in statement: no such function: PASTE
+
+addr %>% summarize(mean = mean(`Violation Precinct`, na.rm=TRUE))
+
+##  Error: na.rm not needed in SQL: NULL are always dropped
+
+addr %>% summarize(mean = mean(`Violation Precinct`))
+
+##  Source: sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  From: <derived table> [?? x 1]
+##  
+##        mean
+##       (dbl)
+##  1  16.0982
+##  ..     ...
+```
+
+
+## SQL Grouping {.smaller}
+
+```{r, eval=FALSE}
+addr %>% group_by(`Issuing Agency`, `Violation Precinct`) %>% summarize(n=n())
+
+##  Source: sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  From: <derived table> [?? x 3]
+##  Grouped by: `Issuing Agency` 
+##  
+##     Issuing Agency Violation Precinct     n
+##              (chr)              (int) (int)
+##  1               A                  1    13
+##  2               A                  7     1
+##  3               A                 10    24
+##  4               A                 11     1
+##  5               A                 14    47
+##  6               A                 33    11
+##  7               B                 10     1
+##  8               B                 25     2
+##  9               C                  5    73
+##  10              C                 13     7
+##  ..            ...                ...   ...
+```
+
+
+## SQL Query
+
+```{r, eval=FALSE}
+addr %>% group_by(`Issuing Agency`, `Violation Precinct`) %>% summarize(n=n()) %>% .$query
+
+##  <Query> SELECT "Issuing Agency", "Violation Precinct", "n"
+##  FROM (SELECT "Issuing Agency", "Violation Precinct", COUNT() AS "n"
+##  FROM "nyc"
+##  WHERE "Violation Precinct" >= 1.0 AND "Violation Precinct" <= 34.0
+##  GROUP BY "Issuing Agency", "Violation Precinct") AS "zzz4"
+##  <SQLiteConnection>
+```
+
+## SQL Translation {.smaller}
+
+dplyr has a function, `translate_sql`, that lets you experiment with how R functions are translated to SQL
+
+<div class="columns-2">
+```{r, error=TRUE}
+translate_sql(x == 1 & (y < 2 | z > 3))
+translate_sql(x ^ 2 < 10)
+translate_sql(x %% 2 == 10)
+translate_sql(paste(x,y))
+translate_sql(mean(x))
+translate_sql(mean(x, na.rm=TRUE))
+```
+</div>
+
+<br/>
+
+In general, dplyr knows how to translate basic math, logical, and summary functions from R to SQL.
+
+
+## (Unfair) Timings {.smaller}
+
+```{r, eval=FALSE}
+system.time(
+    nyc %>%
+    select(`Issue Date`, `Issuing Agency`, `Violation Precinct`, `House Number`, `Street Name`) %>%
+    filter(`Violation Precinct` >=1, `Violation Precinct` <= 34) %>%
+    group_by(`Issuing Agency`, `Violation Precinct`) %>%
+    summarize(n=n())
+)
+
+##    user  system elapsed 
+##   0.860   0.121   0.981 
+
+system.time(
+    nyc_sql %>%
+    select(`Issue Date`, `Issuing Agency`, `Violation Precinct`, `House Number`, `Street Name`) %>%
+    filter(`Violation Precinct` >=1, `Violation Precinct` <= 34) %>%
+    group_by(`Issuing Agency`, `Violation Precinct`) %>%
+    summarize(n=n())
+)
+
+##    user  system elapsed 
+##   0.039   0.001   0.038 
+```
+
+`nyc_sql` was 30x times faster than `nyc`, but the former is disk based while the latter is in memory, why this discrepancy?
+
+
+## Laziness
+
+`dplyr` uses lazy evaluation as much as possible, particularly when working with non-local backends.
+
+* When building a query, we don't want the entire table, often we want just enough to check if our query is working.
+
+* Since we would prefer to run one complex query over many simple queries, laziness allows for verbs to be strung together.
+
+* Therefore, by default `dplyr`
+    
+    * won't connect and query the database until absolutely necessary (e.g. show output),
+
+    * and unless explicitly told to, will only query a handful of rows to give a sense of what the result will look like
+
+## {.smaller}
+
+
+```{r eval=FALSE}
+nyc_sql %>%
+  select(`Issue Date`, `Issuing Agency`, `Violation Precinct`, `House Number`, `Street Name`) %>%
+  filter(`Violation Precinct` >=1, `Violation Precinct` <= 34) %>%
+  group_by(`Issuing Agency`, `Violation Precinct`) %>%
+  summarize(n=n())
+
+##  Source: sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations.sqlite]
+##  From: <derived table> [?? x 3]
+##  Grouped by: `Issuing Agency` 
+##  
+##     Issuing Agency Violation Precinct     n
+##              (chr)              (int) (int)
+##  1               A                  1    13
+##  2               A                  7     1
+##  3               A                 10    24
+##  4               A                 11     1
+##  5               A                 14    47
+##  6               A                 33    11
+##  7               B                 10     1
+##  8               B                 25     2
+##  9               C                  5    73
+##  10              C                 13     7
+##  ..            ...                ...   ...
+```
+
+## Full query {.smaller}
+
+To force a full query and return a complete `tbl_df` object `dplyr` uses the `collect` function.
+
+```{r, eval=FALSE}
+nyc_sql %>%
+  select(`Issue Date`, `Issuing Agency`, `Violation Precinct`, `House Number`, `Street Name`) %>%
+  filter(`Violation Precinct` >=1, `Violation Precinct` <= 34) %>%
+  group_by(`Issuing Agency`, `Violation Precinct`) %>%
+  summarize(n=n()) %>%
+  collect()
+
+##  Source: local data frame [200 x 3]
+##  Groups: Issuing Agency [15]
+##  
+##     Issuing Agency Violation Precinct     n
+##              (chr)              (int) (int)
+##  1               A                  1    13
+##  2               A                  7     1
+##  3               A                 10    24
+##  4               A                 11     1
+##  5               A                 14    47
+##  6               A                 33    11
+##  7               B                 10     1
+##  8               B                 25     2
+##  9               C                  5    73
+##  10              C                 13     7
+##  ..            ...                ...   ...
+```
+
+`compute` and `collapse` also force a full query but have slightly different behavior and return types. 
+
+
+## Creating Indexes
+
+
+```{r, eval=FALSE}
+(db_index = src_sqlite("/data/nyc_parking/NYParkingViolations_index.sqlite", create = TRUE))
+
+## src:  sqlite 3.8.6 [/data/nyc_parking/NYParkingViolations_index.sqlite]
+## tbls:
+
+nyc_index = copy_to(db_index, nyc, temporary = FALSE,
+                    index = list(`Violation Precinct`))
+```
+
+
+##
+
+The indexed database takes up more disk space:
+
+```shell
+cr173@gort [~]$ ls -lh /data/nyc_parking/*.sqlite
+
+-rw-r--r-- 1 cr173 visitor 1.8G Mar 30 11:56 NYParkingViolations_index.sqlite
+-rw-r--r-- 1 cr173 visitor 1.7G Mar 30 11:28 NYParkingViolations.sqlite
+```
+
+## Timings for filtering precincts
+
+```{r, eval=FALSE}
+system.time(nyc_sql %>% filter(`Violation Precinct` <= 34, `Violation Precinct` >= 1) %>% collect())
+
+##    user  system elapsed 
+##  30.630   3.279  34.009 
+
+system.time(nyc_index %>% filter(`Violation Precinct` <= 34, `Violation Precinct` >= 1) %>% collect())
+
+##    user  system elapsed 
+##  32.207   3.197  35.395 
+```
+
+## Timings for grouping
+
+```{r, eval=FALSE}
+system.time(nyc_sql %>% group_by(`Violation Precinct`) %>% summarize(n=n()) %>% collect())
+
+##     user  system elapsed 
+##   21.184   2.829  24.007 
+
+system.time(nyc_index %>% group_by(`Violation Precinct`) %>% summarize(n=n()) %>% collect())
+
+##   user  system elapsed 
+##  1.288   0.102   1.389 
+```
+
+
+# Acknowledgments
+
+## Acknowledgments
+
+Above materials are derived in part from the following sources:
+
+* [dplyr - Introduction Vignette](http://cran.r-project.org/web/packages/dplyr/vignettes/introduction.html)
+* [dplyr - Databases Vignette](http://cran.r-project.org/web/packages/dplyr/vignettes/databases.html)

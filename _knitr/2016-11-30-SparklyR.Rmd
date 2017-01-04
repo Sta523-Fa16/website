@@ -1,0 +1,9 @@
+---
+layout: page
+title: More SparkR
+reading: ""
+notes: "<a href='hw/hw7.html'>HW7</a> - due 11:59 pm Monday, December 19th"
+slides: false
+link: false
+---
+

@@ -1,0 +1,9 @@
+---
+layout: page
+title: SparklyR
+reading: "SparklyR - <a href='http://spark.rstudio.com/'>Docs and Examples</a>"
+notes: "Screencast - <a href='https://youtu.be/54WkUtHnF9g'>SparklyR example</a>"
+slides: false
+link: false
+---
+
